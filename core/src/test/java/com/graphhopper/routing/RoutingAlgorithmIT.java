@@ -21,23 +21,26 @@ import com.graphhopper.routing.util.TestAlgoCollector;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.reader.PrinctonReader;
 import com.graphhopper.routing.util.*;
-import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.GraphBuilder;
 import com.graphhopper.storage.index.LocationIndex;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.Helper;
 import com.graphhopper.util.StopWatch;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPInputStream;
+
 import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -103,6 +106,33 @@ public class RoutingAlgorithmIT
                 list, "CAR", true, "CAR", "fastest");
         assertEquals(testCollector.toString(), 0, testCollector.errors.size());
     }
+    
+    @Test
+    public void testMoscowTurnRestrictions()
+    {
+
+        List<OneRun> list = new ArrayList<OneRun>();
+        list.add(new OneRun(55.813357,37.5958585,55.811042, 37.594689, 1043.99, 12));
+        
+        List<String> algoNames=new LinkedList<String>(com.graphhopper.routing.util.RoutingAlgorithmSpecialAreaTests.getAlgoNames());
+        algoNames.remove("dijkstraNativebi");
+        
+        // A* bi and Dijkstra bi can also pass this test,  if the code for
+        // preventing u turn in AbstractTurnWeighting is uncommented.
+        // unfortunately preventing U turn breaks another test case 
+        // @see com.graphhopper.routing.util.AbstractTurnWeighting.calcTurnWeight(int, int, int, boolean)
+        algoNames.remove("astarbi");
+        algoNames.remove("dijkstrabi");
+        
+        runAlgo(testCollector, "files/moscow.osm.gz", "target/graph-moscow",
+                list, "CAR", algoNames,false,true, "CAR", "fastest");
+        
+        
+        
+        
+        assertEquals(testCollector.toString(), 0, testCollector.errors.size());
+    }
+    
 
     @Test
     public void testMonacoFastest()
@@ -282,10 +312,15 @@ public class RoutingAlgorithmIT
                 "CAR", false, "CAR", "shortest");
         assertEquals(testCollector.toString(), 0, testCollector.errors.size());
     }
+    void runAlgo( TestAlgoCollector testCollector, String osmFile,
+            String graphFile, List<OneRun> forEveryAlgo, String importVehicles,
+            boolean ch, String vehicle, String weightCalcStr ){
+	runAlgo(testCollector, osmFile, graphFile, forEveryAlgo, importVehicles, RoutingAlgorithmSpecialAreaTests.getAlgoNames(),ch, true, vehicle, weightCalcStr);
+    }
 
     void runAlgo( TestAlgoCollector testCollector, String osmFile,
             String graphFile, List<OneRun> forEveryAlgo, String importVehicles,
-            boolean ch, String vehicle, String weightCalcStr )
+            List<String> algoNames, boolean ch,boolean turnRestrictions, String vehicle, String weightCalcStr )
     {
         AlgorithmPreparation tmpPrepare = null;
         OneRun tmpOneRun = null;
@@ -295,15 +330,18 @@ public class RoutingAlgorithmIT
             GraphHopper hopper = new GraphHopper().setInMemory(true).setOSMFile(osmFile).
                     disableCHShortcuts().
                     setGraphHopperLocation(graphFile).setEncodingManager(new EncodingManager(importVehicles)).
+                    setEnableTurnRestrictions(turnRestrictions).
                     importOrLoad();
 
             FlagEncoder encoder = hopper.getEncodingManager().getEncoder(vehicle);
-            Weighting weighting = new ShortestWeighting(encoder);
-            if ("fastest".equalsIgnoreCase(weightCalcStr))
-                weighting = new FastestWeighting(encoder);
+            
+            // instanciate the weighting thru graphhopper instead of manually
+            Weighting weighting = hopper.createWeighting(weightCalcStr,encoder);
+            // for turn restrictions
+            ((AbstractTurnWeighting)weighting).setEnableTurnWeighting(turnRestrictions, turnRestrictions);
 
             Collection<Entry<AlgorithmPreparation, LocationIndex>> prepares = RoutingAlgorithmSpecialAreaTests.
-                    createAlgos(hopper.getGraph(), hopper.getLocationIndex(), encoder, ch, weighting, hopper.getEncodingManager());
+                    createAlgos(hopper.getGraph(), hopper.getLocationIndex(), encoder, algoNames,ch, weighting, hopper.getEncodingManager());
             EdgeFilter edgeFilter = new DefaultEdgeFilter(encoder);
             for (Entry<AlgorithmPreparation, LocationIndex> entry : prepares)
             {

@@ -621,7 +621,10 @@ public class GraphHopper implements GraphHopperAPI
         prepare.setGraph(graph);
     }
 
-    protected Weighting createWeighting( String weighting, FlagEncoder encoder )
+    /**
+     * public for test only
+     */
+    public Weighting createWeighting( String weighting, FlagEncoder encoder )
     {
         // ignore case
         weighting = weighting.toLowerCase();

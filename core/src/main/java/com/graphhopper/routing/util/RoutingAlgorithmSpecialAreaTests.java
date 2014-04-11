@@ -25,13 +25,18 @@ import com.graphhopper.storage.GraphBuilder;
 import com.graphhopper.storage.index.LocationIndex;
 import com.graphhopper.storage.LevelGraph;
 import com.graphhopper.util.StopWatch;
+
 import static com.graphhopper.routing.util.NoOpAlgorithmPreparation.*;
+
 import com.graphhopper.storage.*;
 import com.graphhopper.storage.index.LocationIndexTreeSC;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,16 +119,26 @@ public class RoutingAlgorithmSpecialAreaTests
     }
 
     public static Collection<Entry<AlgorithmPreparation, LocationIndex>> createAlgos( Graph g,
-            LocationIndex idx, FlagEncoder encoder, boolean withCh, Weighting weighting, EncodingManager manager )
+            LocationIndex idx, FlagEncoder encoder,boolean withCh, Weighting weighting, EncodingManager manager ){
+	return createAlgos(g, idx, encoder, getAlgoNames(), withCh, weighting, manager);
+    }
+    public static List<String> getAlgoNames(){
+	 List<String>algoNames=Arrays.asList(
+		    "astar"
+	            //,"dijkstraOneToMany" 
+	            ,"astarbi"
+	            ,"dijkstraNativebi"
+	            ,"dijkstrabi");
+	 return algoNames;
+    }
+    
+    public static Collection<Entry<AlgorithmPreparation, LocationIndex>> createAlgos( Graph g,
+            LocationIndex idx, FlagEncoder encoder, List<String>algoNames,boolean withCh, Weighting weighting, EncodingManager manager )
     {
         // List<Entry<AlgorithmPreparation, LocationIndex>> prepare = new ArrayList<Entry<AlgorithmPreparation, LocationIndex>>();
         List<Entry<AlgorithmPreparation, LocationIndex>> prepare = new ArrayList<Entry<AlgorithmPreparation, LocationIndex>>();
-        prepare.add(new ME(createAlgoPrepare(g, "astar", encoder, weighting), idx));
-        // prepare.add(new ME(createAlgoPrepare(g, "dijkstraOneToMany", encoder, weighting), idx));
-        prepare.add(new ME(createAlgoPrepare(g, "astarbi", encoder, weighting), idx));
-        prepare.add(new ME(createAlgoPrepare(g, "dijkstraNativebi", encoder, weighting), idx));
-        prepare.add(new ME(createAlgoPrepare(g, "dijkstrabi", encoder, weighting), idx));
-        prepare.add(new ME(createAlgoPrepare(g, "dijkstra", encoder, weighting), idx));
+        for(String algoName:algoNames)
+            prepare.add(new ME(createAlgoPrepare(g, algoName, encoder, weighting), idx));
 
         if (withCh)
         {

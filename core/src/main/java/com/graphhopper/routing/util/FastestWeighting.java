@@ -60,7 +60,7 @@ public class FastestWeighting extends AbstractTurnWeighting implements Weighting
     @Override
     protected double calcTurnWeight( int edgeFrom, int nodeVia, int edgeTo )
     {
-        int turnFlags = turnCostStorage.getTurnCosts(edgeFrom, nodeVia, edgeTo);
+        int turnFlags = turnCostStorage.getTurnCosts(nodeVia, edgeFrom, edgeTo);
         if (isEnabledTurnRestrictions() && turnCostEncoder.isTurnRestricted(turnFlags))
         {
             //we only consider turn restrictions in shortest calculation

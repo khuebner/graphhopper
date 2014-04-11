@@ -57,6 +57,15 @@ public class AStar extends AbstractRoutingAlgorithm
         super(g, encoder, weighting);
         initCollections(1000);
         setApproximation(true);
+        
+      // for turn restrictions
+      // Note: if turn restrictions are enabled during the test com.graphhopper.routing.RoutingAlgorithmIT.testPerformance()
+      // it will fail
+      if (weighting instanceof TurnWeighting)
+	  if (((TurnWeighting)weighting).isEnabledTurnRestrictions() || ((TurnWeighting)weighting).isEnabledTurnRestrictions())
+              setTraversalMode(AbstractRoutingAlgorithm.TRAVERSAL_MODE.EDGE_BASED_DIRECTION_SENSITIVE);
+          
+
     }
 
     /**
@@ -118,7 +127,7 @@ public class AStar extends AbstractRoutingAlgorithm
 
                 if (weighting instanceof TurnWeighting)
                 {
-                    alreadyVisitedWeight += ((TurnWeighting) weighting).calcTurnWeight(currEdge.edge, neighborNode, iter.getEdge(), false);
+                    alreadyVisitedWeight += ((TurnWeighting) weighting).calcTurnWeight(currEdge.edge, iter.getBaseNode(), iter.getEdge(), false);
                 }
 
                 AStarEdge nEdge = fromMap.get(iterationKey);

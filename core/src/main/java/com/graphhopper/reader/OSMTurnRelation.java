@@ -3,8 +3,12 @@ package com.graphhopper.reader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.graphhopper.routing.util.TurnCostEncoder;
 import com.graphhopper.util.EdgeExplorer;
@@ -17,6 +21,7 @@ import com.graphhopper.util.EdgeIterator;
  */
 public class OSMTurnRelation
 {
+    static Logger logger = LoggerFactory.getLogger(OSMTurnRelation.class);
 
     enum Type
     {
@@ -87,7 +92,10 @@ public class OSMTurnRelation
         {
             if (viaNodeId == OSMReader.EMPTY)
             {
-                throw new IllegalArgumentException("Unknown node osm id");
+             	// could this happen due to a problem in the OSM data?
+                //throw new IllegalArgumentException("Unknown node osm id "+viaOsm);
+                logger.warn("Unknown node osm id:"+viaOsm);
+                return new LinkedList<OSMTurnRelation.TurnCostTableEntry>();
             }
 
             int edgeIdFrom = EdgeIterator.NO_EDGE;

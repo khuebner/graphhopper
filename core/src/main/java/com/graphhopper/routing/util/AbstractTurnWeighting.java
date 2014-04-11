@@ -62,6 +62,14 @@ public abstract class AbstractTurnWeighting implements TurnWeighting
     @Override
     public double calcTurnWeight( int edgeFrom, int nodeVia, int edgeTo, boolean reverse )
     {
+	// FIXME:
+	// when commented : astarbi and dijkstrabi are failing in com.graphhopper.routing.RoutingAlgorithmIT.testMoscowTurnRestrictions()
+	// when not commented : com.graphhopper.routing.DijkstraBidirectionRefTest.testCalcIfEmptyWay() 
+//	if (edgeFrom==edgeTo){
+//	    // prevent U turn in A* bidirectional EDGE_BASED
+//	    return Double.MAX_VALUE;
+//	}
+	
         if (!isEnabledTurnCosts() && !isEnabledTurnRestrictions())
         {
             return 0;
